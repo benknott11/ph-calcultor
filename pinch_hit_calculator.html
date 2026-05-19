@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pinch Hit Calculator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f5;
+  color: #1a1a1a;
+  min-height: 100vh;
+  padding: 1.5rem 1rem 3rem;
+}
+h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: #111;
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media(max-width: 600px){ .grid2 { grid-template-columns: 1fr; } }
+.card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+.card h3 { font-size: 12px; font-weight: 500; color: #888; margin: 0 0 14px; letter-spacing: .03em; }
+.row { margin-bottom: 13px; }
+.lbl { font-size: 12px; color: #666; margin-bottom: 5px; }
+.hbg { display: flex; gap: 6px; }
+.hbtn {
+  flex: 1; padding: 7px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666;
+  transition: all .15s;
+}
+.hbtn.on { background: #185FA5; border-color: #185FA5; color: #fff; }
+.ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.ab-box {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e8e8e8;
+}
+.ab-box label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
+.ab-box input {
+  width: 100%; font-size: 18px; font-weight: 500;
+  border: none; background: transparent; color: #1a1a1a;
+  outline: none; padding: 0; display: block;
+}
+select {
+  width: 100%; padding: 7px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  background: #f8f8f8;
+  color: #1a1a1a;
+}
+.result {
+  background: #f8f8f8;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  margin-bottom: 12px;
+}
+.pct { font-size: 56px; font-weight: 500; line-height: 1; margin-bottom: 2px; }
+.verdict { font-size: 15px; font-weight: 500; margin: 10px 0 3px; }
+.vsub { font-size: 13px; color: #666; line-height: 1.5; }
+.meter {
+  height: 10px; border-radius: 5px;
+  background: #e8e8e8;
+  margin: 14px 0 0; overflow: hidden;
+}
+.mfill { height: 100%; border-radius: 5px; transition: width .4s, background .4s; }
+.factors { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.fbox { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 9px 12px; }
+.flbl { font-size: 11px; color: #888; margin-bottom: 3px; }
+.fval { font-size: 13px; font-weight: 500; }
+.exbtn {
+  width: 100%; padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+.exbtn:hover { background: #f0f0f0; }
+.pill {
+  display: inline-block; font-size: 11px;
+  padding: 2px 8px; border-radius: 20px;
+  margin-left: 6px; font-weight: 500;
+  background: #E6F1FB; color: #0C447C;
+}
+.today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.today-box {
+  background: #f8f8f8; border-radius: 8px;
+  padding: 8px 10px; border: 1px solid #e8e8e8; text-align: center;
+}
+.today-box label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
+.today-box input {
+  width: 100%; font-size: 18px; font-weight: 500;
+  border: none; background: transparent; color: #1a1a1a;
+  outline: none; padding: 0; text-align: center; display: block;
+}
+.hot-badge {
+  display: inline-block; font-size: 11px;
+  padding: 2px 9px; border-radius: 20px;
+  font-weight: 500; margin-left: 8px;
+  background: #EAF3DE; color: #27500A;
+}
+input[type=range] { width: 100%; accent-color: #185FA5; }
+.role-box { text-align: right; }
+.role-box .role-lbl { font-size: 11px; color: #888; margin-bottom: 4px; }
+.role-box .role-pct { font-size: 22px; font-weight: 500; }
+.role-box .role-sub { font-size: 11px; color: #888; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h1>⚾ Pinch Hit Calculator</h1>
+
+<div class="grid2">
+  <div class="card">
+    <h3>BATTER</h3>
+    <div class="row">
+      <div class="lbl">handedness</div>
+      <div class="hbg" id="batter-group">
+        <button class="hbtn on" data-v="L">Left</button>
+        <button class="hbtn" data-v="R">Right</button>
+        <button class="hbtn" data-v="S">Switch</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl">season ABs vs each pitcher type <span class="pill">key</span></div>
+      <div class="ab-grid">
+        <div class="ab-box"><label>vs RHP</label><input type="number" id="ab-rhp" value="57" min="0" inputmode="numeric"/></div>
+        <div class="ab-box"><label>vs LHP</label><input type="number" id="ab-lhp" value="1" min="0" inputmode="numeric"/></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#888" id="split-context"></div>
+    </div>
+    <div class="row">
+      <div class="lbl">defense</div>
+      <div class="hbg" id="defense-group">
+        <button class="hbtn" data-v="poor">Poor</button>
+        <button class="hbtn on" data-v="average">Average</button>
+        <button class="hbtn" data-v="good">Good</button>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:0">
+      <div class="lbl">today's game <span id="hot-badge-wrap"></span></div>
+      <div class="today-grid">
+        <div class="today-box"><label>hits</label><input type="number" id="t-hits" value="0" min="0" inputmode="numeric"/></div>
+        <div class="today-box"><label>AB so far</label><input type="number" id="t-abs" value="0" min="0" inputmode="numeric"/></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>PITCHER & SITUATION</h3>
+    <div class="row">
+      <div class="lbl">pitcher handedness</div>
+      <div class="hbg" id="pitcher-group">
+        <button class="hbtn" data-v="R">Right</button>
+        <button class="hbtn on" data-v="L">Left</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="lbl">inning: <span id="inn-val">7th</span></div>
+      <input type="range" id="inn-range" min="1" max="9" step="1" value="7"/>
+    </div>
+    <div class="row">
+      <div class="lbl">score differential: <span id="sc-val" style="font-weight:500">−1</span></div>
+      <input type="range" id="sc-range" min="-10" max="10" step="1" value="-1"/>
+    </div>
+    <div class="row">
+      <div class="lbl">outs in inning</div>
+      <div class="hbg" id="outs-group">
+        <button class="hbtn on" data-v="0">0 outs</button>
+        <button class="hbtn" data-v="1">1 out</button>
+        <button class="hbtn" data-v="2">2 outs</button>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:0">
+      <div class="lbl">runners on base</div>
+      <select id="runners">
+        <option value="empty">Bases empty</option>
+        <option value="first" selected>Runner on 1st</option>
+        <option value="second">Runner on 2nd</option>
+        <option value="third">Runner on 3rd</option>
+        <option value="first_second">1st &amp; 2nd</option>
+        <option value="first_third">1st &amp; 3rd</option>
+        <option value="second_third">2nd &amp; 3rd</option>
+        <option value="loaded">Bases loaded</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="result">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="pct" id="pct">—</div>
+      <div class="verdict" id="verdict">—</div>
+      <div class="vsub" id="vsub">—</div>
+    </div>
+    <div class="role-box">
+      <div class="role-lbl">platoon role signal</div>
+      <div class="role-pct" id="role-pct">—</div>
+      <div class="role-sub" id="role-label">—</div>
+    </div>
+  </div>
+  <div class="meter"><div class="mfill" id="mfill" style="width:0%"></div></div>
+  <div class="factors">
+    <div class="fbox"><div class="flbl">platoon matchup</div><div class="fval" id="f-plat">—</div></div>
+    <div class="fbox"><div class="flbl">AB split ratio</div><div class="fval" id="f-abs">—</div></div>
+    <div class="fbox"><div class="flbl">game situation</div><div class="fval" id="f-lev">—</div></div>
+    <div class="fbox"><div class="flbl">defense / lead</div><div class="fval" id="f-def">—</div></div>
+  </div>
+</div>
+
+<script>
+const S={batter:'L',pitcher:'L',inn:7,sc:-1,runners:'first',outs:0,defense:'average'};
+const ords=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th'];
+const LEAGUE_RHP=0.72;
+
+const RUNNERS={
+  empty:        {hasRunners:false,scoringPos:false,boost:0},
+  first:        {hasRunners:true, scoringPos:false,boost:5},
+  second:       {hasRunners:true, scoringPos:true, boost:14},
+  third:        {hasRunners:true, scoringPos:true, boost:18},
+  first_second: {hasRunners:true, scoringPos:true, boost:10},
+  first_third:  {hasRunners:true, scoringPos:true, boost:16},
+  second_third: {hasRunners:true, scoringPos:true, boost:19},
+  loaded:       {hasRunners:true, scoringPos:true, boost:20},
+};
+
+function setupGroup(id,key,isNum){
+  document.getElementById(id).querySelectorAll('button').forEach(btn=>{
+    btn.classList.toggle('on', isNum ? +btn.dataset.v===S[key] : btn.dataset.v===S[key]);
+    btn.addEventListener('click',function(){
+      S[key]=isNum?+this.dataset.v:this.dataset.v;
+      document.getElementById(id).querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+      this.classList.add('on');
+      calc();
+    });
+  });
+}
+setupGroup('batter-group','batter',false);
+setupGroup('pitcher-group','pitcher',false);
+setupGroup('outs-group','outs',true);
+setupGroup('defense-group','defense',false);
+
+document.getElementById('inn-range').addEventListener('input',function(){
+  S.inn=+this.value;document.getElementById('inn-val').textContent=ords[+this.value-1];calc();
+});
+document.getElementById('sc-range').addEventListener('input',function(){
+  S.sc=+this.value;
+  const v=+this.value;
+  document.getElementById('sc-val').textContent=v>0?`+${v}`:v===0?'tied':`${v}`;
+  calc();
+});
+document.getElementById('runners').addEventListener('change',function(){S.runners=this.value;calc();});
+['ab-rhp','ab-lhp','t-hits','t-abs'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',calc);
+  el.addEventListener('change',calc);
+  el.addEventListener('focus',function(){this.select();});
+});
+
+function innFactor(inn){
+  const f=[0,0.18,0.19,0.28,0.52,0.79,0.88,0.95,1.03,1.07];
+  return f[inn]||1.07;
+}
+function scoreFactor(sd){
+  const map={'-10':0.15,'-9':0.18,'-8':0.22,'-7':0.28,'-6':0.38,'-5':0.76,'-4':0.92,
+             '-3':1.01,'-2':1.05,'-1':1.05,'0':1.05,'1':0.95,'2':0.90,'3':0.85,
+             '4':0.78,'5':0.68,'6':0.42};
+  return map[String(sd)]??0.22;
+}
+function defenseAdj(defense,sd,inn){
+  if(defense==='average') return 0;
+  if(sd<=0) return 0;
+  let leadFactor=0;
+  if(sd===1)leadFactor=0.15;
+  else if(sd===2)leadFactor=0.50;
+  else if(sd===3)leadFactor=0.80;
+  else if(sd===4)leadFactor=1.00;
+  else if(sd===5)leadFactor=0.90;
+  else if(sd===6)leadFactor=0.50;
+  else leadFactor=0.20;
+  let innFac=0;
+  if(inn>=9)innFac=1.00;
+  else if(inn===8)innFac=0.90;
+  else if(inn===7)innFac=0.75;
+  else if(inn===6)innFac=0.65;
+  else if(inn===5)innFac=0.30;
+  else if(inn===4)innFac=0.10;
+  else innFac=0.02;
+  const combined=leadFactor*innFac;
+  if(defense==='good') return Math.round(-14*combined);
+  if(defense==='poor') return Math.round(+6*combined);
+  return 0;
+}
+
+function calc(){
+  S.runners=document.getElementById('runners').value;
+  const abR=Math.max(0,+document.getElementById('ab-rhp').value||0);
+  const abL=Math.max(0,+document.getElementById('ab-lhp').value||0);
+  const total=abR+abL;
+  const tHits=Math.max(0,+document.getElementById('t-hits').value||0);
+  const tABs=Math.max(0,+document.getElementById('t-abs').value||0);
+  const sw=S.batter==='S';
+  const sameHand=!sw&&S.batter===S.pitcher;
+
+  let platoonScore=50,rolePct=null,roleLabel='no AB data';
+  if(total>0){
+    const frac=S.pitcher==='R'?abR/total:abL/total;
+    rolePct=Math.round(frac*100);
+    const inv=1-frac;
+    let raw=Math.round(Math.pow(inv,0.7)*95);
+    const sampleW=total<5?0.3:total<15?0.65:total<30?0.85:1.0;
+    platoonScore=Math.round(50+(raw-50)*sampleW);
+    const rawExtreme=Math.abs(platoonScore-50)/50;
+    const leagueWeight=Math.pow(1-rawExtreme,3);
+    const rhpDev=(abR/total)-LEAGUE_RHP;
+    const devVC=S.pitcher==='R'?rhpDev:-rhpDev;
+    const leagueNudge=Math.round(-devVC*30*leagueWeight);
+    platoonScore=Math.min(97,Math.max(2,platoonScore+leagueNudge));
+    const expR=Math.round(total*LEAGUE_RHP);
+    const expL=total-expR;
+    const abVC=S.pitcher==='R'?abR:abL;
+    const expVC=S.pitcher==='R'?expR:expL;
+    const diff=abVC-expVC;
+    const diffStr=diff>0?`+${diff} vs expected`:diff<0?`${diff} vs expected`:'at expected';
+    roleLabel=Math.abs(devVC)>=0.20?'heavy platoon specialist'
+             :Math.abs(devVC)>=0.12?'platoon specialist'
+             :Math.abs(devVC)>=0.05?'mild platoon lean':'balanced usage';
+    document.getElementById('split-context').textContent=`league avg for ${total} ABs: ~${expR} vs RHP / ~${expL} vs LHP`;
+    document.getElementById('f-abs').textContent=`${abVC} of ${total} ABs vs ${S.pitcher}HP (exp. ~${expVC}, ${diffStr})`;
+    document.getElementById('f-abs').style.color=diff<-2?'#A32D2D':diff>2?'#166534':'#1a1a1a';
+  } else {
+    document.getElementById('split-context').textContent='';
+    document.getElementById('f-abs').textContent='Enter AB data above';
+    document.getElementById('f-abs').style.color='#888';
+  }
+
+  if(!sw){
+    const base=sameHand?18:-18;
+    const hw=total<10?1.0:total<30?0.75:total<60?0.45:0.20;
+    platoonScore=Math.min(97,Math.max(2,platoonScore+Math.round(base*hw)));
+  }
+
+  const inf=innFactor(S.inn);
+  const sf=scoreFactor(S.sc);
+  const {hasRunners,scoringPos,boost:rb}=RUNNERS[S.runners]||RUNNERS.empty;
+  const extreme=Math.abs(platoonScore-50)/50;
+  const sitInfl=1-(extreme*0.7);
+
+  let sitBoost=0;
+  if(S.outs===2&&!hasRunners)sitBoost=-8;
+  else if(S.outs===2&&hasRunners)sitBoost=scoringPos?rb*0.5:2;
+  else if(S.outs===1&&!hasRunners)sitBoost=0;
+  else if(S.outs===1&&hasRunners)sitBoost=scoringPos?rb*0.8:rb*0.5;
+  else if(S.outs===0&&!hasRunners)sitBoost=3;
+  else if(S.outs===0&&hasRunners)sitBoost=rb;
+
+  let adj=platoonScore*inf*sf+sitBoost*sitInfl;
+  const defAdj=defenseAdj(S.defense,S.sc,S.inn);
+  adj+=defAdj;
+
+  let todayAdj=0,todayLabel='No ABs yet',todayColor='#888',hotBadge='';
+  if(tABs>0){
+    const avg=tHits/tABs;
+    if(tHits===0){todayAdj=2;todayLabel=`0 for ${tABs} today`;todayColor='#A32D2D';}
+    else if(avg>=0.667&&tABs>=2){todayAdj=-18*sitInfl;todayLabel=`${tHits} for ${tABs} — locked in`;todayColor='#166534';hotBadge='<span class="hot-badge">🔥 hot today</span>';}
+    else if(avg>=0.400){todayAdj=-8*sitInfl;todayLabel=`${tHits} for ${tABs} — good day`;todayColor='#166534';}
+    else if(avg>=0.250){todayAdj=-3*sitInfl;todayLabel=`${tHits} for ${tABs}`;todayColor='#1a1a1a';}
+    else{todayAdj=1;todayLabel=`${tHits} for ${tABs} — cold`;todayColor='#A32D2D';}
+  }
+  adj+=todayAdj;
+
+  const pct=Math.max(2,Math.min(97,Math.round(adj)));
+  const color=pct>=65?'#A32D2D':pct>=42?'#BA7517':'#185FA5';
+
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('pct').style.color=color;
+  document.getElementById('mfill').style.width=pct+'%';
+  document.getElementById('mfill').style.background=color;
+  document.getElementById('hot-badge-wrap').innerHTML=hotBadge;
+
+  const vt=pct>=78?'Strong case to be pinch hit for':pct>=62?'Likely to be pinch hit for':pct>=45?'Could go either way':pct>=28?'Likely to stay in':'Should stay in the lineup';
+  document.getElementById('verdict').textContent=vt;
+
+  const p1=sw?'↔ Switch hitter — neutral':sameHand?`⚠ ${S.batter}HB vs ${S.pitcher}HP — same hand`:`✓ ${S.batter}HB vs ${S.pitcher}HP — opposite hand`;
+  document.getElementById('f-plat').textContent=p1;
+  document.getElementById('f-plat').style.color=sw?'#888':sameHand?'#A32D2D':'#166534';
+
+  if(total>0){
+    document.getElementById('role-pct').textContent=rolePct+'%';
+    document.getElementById('role-pct').style.color=color;
+    document.getElementById('role-label').textContent=roleLabel;
+  } else {
+    document.getElementById('role-pct').textContent='—';
+    document.getElementById('role-label').textContent='no AB data entered';
+  }
+
+  const sd=S.sc;
+  let defLabel='No effect',defColor='#888';
+  if(S.defense==='average'){
+    defLabel='Average — no effect';
+  } else if(sd<=0){
+    defLabel=S.defense==='good'?'Good defender — trailing, glove irrelevant':'Poor defender — trailing, irrelevant';
+  } else if(S.inn<6){
+    defLabel=S.defense==='good'?'Good defender — too early to matter':'Poor defender — too early to matter';
+  } else if(S.defense==='good'){
+    defLabel=`Good defender — protecting +${sd} lead`;defColor='#166534';
+  } else if(S.defense==='poor'){
+    defLabel=`Poor defender — liability with +${sd} lead`;defColor='#A32D2D';
+  }
+  document.getElementById('f-def').textContent=defLabel;
+  document.getElementById('f-def').style.color=defColor;
+
+  const gs=sd<=-7?'Large deficit':sd<=-5?'Down big':sd===-4?'Down 4':sd===-3?'Down 3':sd<0?'Trailing':sd===0?'Tied':sd<=2?'Slight lead':sd<=5?'Comfortable lead':'Big lead';
+  document.getElementById('f-lev').textContent=`${gs} · ${ords[S.inn-1]} inning`;
+  document.getElementById('f-lev').style.color=(sd>=-3&&sd<=1&&S.inn>=7)?'#A32D2D':'#1a1a1a';
+
+  let parts=[];
+  if(sd<=-7)parts.push('large deficit — letting guys play');
+  else if(sd>=6)parts.push('comfortable lead');
+  parts.push(sw?'switch hitter — neutral':sameHand?'same-hand disadvantage':'favorable platoon matchup');
+  if(S.inn<=3)parts.push('early in game');
+  else if(S.inn>=7)parts.push('late game');
+  if(sd>=-2&&sd<=0)parts.push('peak leverage');
+  if(S.outs===2&&!hasRunners)parts.push('2 outs, nobody on');
+  else if(scoringPos)parts.push('runners in scoring position');
+  if(defAdj<=-5)parts.push('keeping good defender in field');
+  else if(defAdj>=3)parts.push('poor defender on field');
+  if(todayAdj<=-8)parts.push('hot today');
+  document.getElementById('vsub').textContent=parts.join(' · ');
+}
+calc();
+</script>
+</body>
+</html>
